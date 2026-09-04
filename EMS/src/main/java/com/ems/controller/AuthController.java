@@ -2,6 +2,7 @@ package com.ems.controller;
 
 import com.ems.common.ApiResponse;
 import com.ems.dto.LoginDto;
+import com.ems.dto.SignupDto;
 import com.ems.entity.User;
 import com.ems.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,13 @@ public class AuthController {
     public ResponseEntity<ApiResponse<User>> login(
             @RequestBody LoginDto loginDto) {
 
-        ApiResponse<User> response =
-                authService.login(loginDto);
+        return authService.login(loginDto);
+    }
 
-        return ResponseEntity.ok(response);
+    @PostMapping("/signup")
+    public ResponseEntity<ApiResponse<User>> signup(
+            @RequestBody SignupDto signupDto) {
+
+        return authService.signup(signupDto);
     }
 }

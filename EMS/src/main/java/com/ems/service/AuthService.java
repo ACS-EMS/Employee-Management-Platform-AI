@@ -2,10 +2,13 @@ package com.ems.service;
 
 import com.ems.common.ApiResponse;
 import com.ems.dto.LoginDto;
+import com.ems.dto.SignupDto;
 import com.ems.entity.User;
 import com.ems.exception.InvalidCredentialsException;
 import com.ems.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,36 +21,125 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public ApiResponse<User> login(LoginDto loginDto) {
+    public ResponseEntity<ApiResponse<User>> login(LoginDto loginDto) {
 
-        User user = userRepository
-                .findByEmailIgnoreCase(loginDto.getEmail())
-                .orElseThrow(() ->
-                        new InvalidCredentialsException(
-                                "Invalid email or password"
-                        )
+        try {
+
+            User user = userRepository
+                    .findByEmailIgnoreCase(loginDto.getEmail())
+                    .orElseThrow(() ->
+                            new InvalidCredentialsException(
+                                    "Invalid email or password"
+                            )
+                    );
+
+            boolean passwordMatches =
+                    passwordEncoder.matches(
+                            loginDto.getPassword(),
+                            user.getPassword()
+                    );
+
+            if (!passwordMatches) {
+                throw new InvalidCredentialsException(
+                        "Invalid email or password"
                 );
+            }
 
-        boolean passwordMatches =
-                passwordEncoder.matches(
-                        loginDto.getPassword(),
-                        user.getPassword()
-                );
+            ApiResponse<User> response =
+                    new ApiResponse<>(
+                            true,
+                            "Login successful",
+                            user
+                    );
 
-        System.out.println("Password matches: " + passwordMatches);
+            return new ResponseEntity<>(
+                    response,
+                    HttpStatus.OK
+            );
 
-        if (!passwordMatches) {
-            throw new InvalidCredentialsException(
-                    "Invalid email or password"
+        } catch (InvalidCredentialsException e) {
+
+            ApiResponse<User> response =
+                    new ApiResponse<>(
+                            false,
+                            e.getMessage(),
+                            null
+                    );
+
+            return new ResponseEntity<>(
+                    response,
+                    HttpStatus.UNAUTHORIZED
             );
         }
+    }
 
 
+    public ResponseEntity<ApiResponse<User>> signup(SignupDto signupDto) {
 
-        return new ApiResponse<>(
-                true,
-                "Login successful",
-                user
-        );
+        try {
+
+            boolean emailExists =
+                    userRepository
+                            .findByEmailIgnoreCase(signupDto.getEmail())
+                            .isPresent();
+
+            if (emailExists) {
+
+                ApiResponse<User> response =
+                        new ApiResponse<>(
+                                false,
+                                "Email already registered",
+                                null
+                        );
+
+                return new ResponseEntity<>(
+                        response,
+                        HttpStatus.CONFLICT
+                );
+            }
+
+            User user = new User();
+
+            user.setUserName(signupDto.getUserName());
+            user.setEmail(signupDto.getEmail());
+
+            user.setPassword(
+                    passwordEncoder.encode(
+                            signupDto.getPassword()
+                    )
+            );
+
+            user.setRole(signupDto.getRole());
+            user.setActive(true);
+
+            User savedUser =
+                    userRepository.save(user);
+
+            ApiResponse<User> response =
+                    new ApiResponse<>(
+                            true,
+                            "User registered successfully",
+                            savedUser
+                    );
+
+            return new ResponseEntity<>(
+                    response,
+                    HttpStatus.CREATED
+            );
+
+        } catch (Exception e) {
+
+            ApiResponse<User> response =
+                    new ApiResponse<>(
+                            false,
+                            "Registration failed",
+                            null
+                    );
+
+            return new ResponseEntity<>(
+                    response,
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }
