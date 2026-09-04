@@ -1,6 +1,7 @@
 package com.ems.service;
 
 import com.ems.common.ApiResponse;
+import com.ems.dto.AuthResponseDto;
 import com.ems.dto.LoginDto;
 import com.ems.dto.SignupDto;
 import com.ems.entity.User;
@@ -21,7 +22,12 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public ResponseEntity<ApiResponse<User>> login(LoginDto loginDto) {
+    @Autowired
+    private JwtService jwtService;
+
+
+    public ResponseEntity<ApiResponse<AuthResponseDto>> login(
+            LoginDto loginDto) {
 
         try {
 
@@ -45,11 +51,26 @@ public class AuthService {
                 );
             }
 
-            ApiResponse<User> response =
+            String token =
+                    jwtService.generateToken(
+                            user.getEmail(),
+                            user.getRole()
+                    );
+
+            AuthResponseDto authResponse =
+                    new AuthResponseDto(
+                            user.getUserId(),
+                            user.getUserName(),
+                            user.getEmail(),
+                            user.getRole(),
+                            token
+                    );
+
+            ApiResponse<AuthResponseDto> response =
                     new ApiResponse<>(
                             true,
                             "Login successful",
-                            user
+                            authResponse
                     );
 
             return new ResponseEntity<>(
@@ -59,7 +80,7 @@ public class AuthService {
 
         } catch (InvalidCredentialsException e) {
 
-            ApiResponse<User> response =
+            ApiResponse<AuthResponseDto> response =
                     new ApiResponse<>(
                             false,
                             e.getMessage(),
@@ -74,13 +95,16 @@ public class AuthService {
     }
 
 
-    public ResponseEntity<ApiResponse<User>> signup(SignupDto signupDto) {
+    public ResponseEntity<ApiResponse<User>> signup(
+            SignupDto signupDto) {
 
         try {
 
             boolean emailExists =
                     userRepository
-                            .findByEmailIgnoreCase(signupDto.getEmail())
+                            .findByEmailIgnoreCase(
+                                    signupDto.getEmail()
+                            )
                             .isPresent();
 
             if (emailExists) {
@@ -100,8 +124,13 @@ public class AuthService {
 
             User user = new User();
 
-            user.setUserName(signupDto.getUserName());
-            user.setEmail(signupDto.getEmail());
+            user.setUserName(
+                    signupDto.getUserName()
+            );
+
+            user.setEmail(
+                    signupDto.getEmail()
+            );
 
             user.setPassword(
                     passwordEncoder.encode(
@@ -109,7 +138,10 @@ public class AuthService {
                     )
             );
 
-            user.setRole(signupDto.getRole());
+            user.setRole(
+                    signupDto.getRole()
+            );
+
             user.setActive(true);
 
             User savedUser =

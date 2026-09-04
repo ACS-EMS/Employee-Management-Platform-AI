@@ -1,6 +1,7 @@
 package com.ems.controller;
 
 import com.ems.common.ApiResponse;
+import com.ems.dto.AuthResponseDto;
 import com.ems.dto.LoginDto;
 import com.ems.dto.SignupDto;
 import com.ems.entity.User;
@@ -18,7 +19,7 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<User>> login(
+    public ResponseEntity<ApiResponse<AuthResponseDto>> login(
             @RequestBody LoginDto loginDto) {
 
         return authService.login(loginDto);

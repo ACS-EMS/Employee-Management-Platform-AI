@@ -1,27 +1,174 @@
 package com.ems.config;
 
+import com.ems.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
 
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter) {
+
+        this.jwtAuthenticationFilter =
+                jwtAuthenticationFilter;
+    }
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http) throws Exception {
 
         http
-                .csrf(csrf -> csrf.disable())
+
+                // Disable CSRF because we are using JWT
+                .csrf(csrf ->
+                        csrf.disable()
+                )
+
+                // Stateless session
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+
+                // Authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated()
+
+                        // =========================
+                        // AUTH APIs
+                        // =========================
+                        .requestMatchers(
+                                "/api/auth/login",
+                                "/api/auth/signup"
+                        ).permitAll()
+
+
+                        // =========================
+                        // JOB APIs
+                        // =========================
+
+                        // Anyone logged in can view jobs
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/jobs",
+                                "/api/jobs/**"
+                        ).authenticated()
+
+                        // Employer/Admin can create jobs
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/jobs"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+                        // Employer/Admin can update jobs
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/jobs/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+                        // Employer/Admin can delete jobs
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/api/jobs/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+
+                        // =========================
+                        // APPLICATION APIs
+                        // =========================
+
+                        // Candidate applies for a job
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/applications/apply/**"
+                        ).hasRole(
+                                "CANDIDATE"
+                        )
+
+                        // Candidate views own applications
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/applications/my"
+                        ).hasRole(
+                                "CANDIDATE"
+                        )
+
+                        // Candidate withdraws own application
+                        // IMPORTANT: keep this before the
+                        // general PUT /api/applications/** rule
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/applications/*/withdraw"
+                        ).hasRole(
+                                "CANDIDATE"
+                        )
+
+                        // Employer/Admin views applicants
+                        // for a particular job
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/applications/job/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+                        // Employer/Admin updates
+                        // application status
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/applications/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+
+                        // =========================
+                        // ALL OTHER APIs
+                        // =========================
+                        .anyRequest()
+                        .authenticated()
+                )
+
+                // JWT filter runs before
+                // UsernamePasswordAuthenticationFilter
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();
     }
 
 
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration configuration)
+            throws Exception {
+
+        return configuration
+                .getAuthenticationManager();
+    }
 }
