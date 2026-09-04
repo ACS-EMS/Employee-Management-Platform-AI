@@ -21,9 +21,9 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-        this.jwtAuthenticationFilter =
-                jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -31,24 +31,36 @@ public class SecurityConfig {
 
         http
 
-                // Disable CSRF because we are using JWT
+                // =========================
+                // CSRF
+                // =========================
                 .csrf(csrf ->
                         csrf.disable()
                 )
 
-                // Stateless session
+
+                // =========================
+                // SESSION
+                // =========================
+                // JWT is stateless,
+                // so Spring should not create sessions
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                // Authorization rules
+
+                // =========================
+                // AUTHORIZATION
+                // =========================
                 .authorizeHttpRequests(auth -> auth
+
 
                         // =========================
                         // AUTH APIs
                         // =========================
+
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/signup"
@@ -59,12 +71,13 @@ public class SecurityConfig {
                         // JOB APIs
                         // =========================
 
-                        // Anyone logged in can view jobs
+                        // Logged-in users can view jobs
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/jobs",
                                 "/api/jobs/**"
                         ).authenticated()
+
 
                         // Employer/Admin can create jobs
                         .requestMatchers(
@@ -75,6 +88,7 @@ public class SecurityConfig {
                                 "ADMIN"
                         )
 
+
                         // Employer/Admin can update jobs
                         .requestMatchers(
                                 HttpMethod.PUT,
@@ -83,6 +97,7 @@ public class SecurityConfig {
                                 "EMPLOYER",
                                 "ADMIN"
                         )
+
 
                         // Employer/Admin can delete jobs
                         .requestMatchers(
@@ -98,13 +113,14 @@ public class SecurityConfig {
                         // APPLICATION APIs
                         // =========================
 
-                        // Candidate applies for a job
+                        // Candidate applies for job
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/applications/apply/**"
                         ).hasRole(
                                 "CANDIDATE"
                         )
+
 
                         // Candidate views own applications
                         .requestMatchers(
@@ -114,15 +130,16 @@ public class SecurityConfig {
                                 "CANDIDATE"
                         )
 
+
                         // Candidate withdraws own application
-                        // IMPORTANT: keep this before the
-                        // general PUT /api/applications/** rule
+                        // Keep this BEFORE general PUT application rule
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/*/withdraw"
                         ).hasRole(
                                 "CANDIDATE"
                         )
+
 
                         // Employer/Admin views applicants
                         // for a particular job
@@ -133,6 +150,7 @@ public class SecurityConfig {
                                 "EMPLOYER",
                                 "ADMIN"
                         )
+
 
                         // Employer/Admin updates
                         // application status
@@ -146,22 +164,83 @@ public class SecurityConfig {
 
 
                         // =========================
-                        // ALL OTHER APIs
+                        // INTERVIEW APIs
                         // =========================
+
+                        // Employer/Admin schedules interview
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/interviews/schedule"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+
+                        // Candidate views own interviews
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/interviews/my"
+                        ).hasRole(
+                                "CANDIDATE"
+                        )
+
+
+                        // Employer/Admin views
+                        // interviews for a job
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/interviews/job/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+
+                        // Employer/Admin reschedules interview
+                        // or updates interview status
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/interviews/**"
+                        ).hasAnyRole(
+                                "EMPLOYER",
+                                "ADMIN"
+                        )
+
+
+                        // =========================
+                        // OTHER APIs
+                        // =========================
+
                         .anyRequest()
                         .authenticated()
                 )
 
-                // JWT filter runs before
-                // UsernamePasswordAuthenticationFilter
+
+                // =========================
+                // JWT FILTER
+                // =========================
+
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
 
+
         return http.build();
     }
 
+
+    // =========================
+    // PASSWORD ENCODER
+    // =========================
+
+
+
+
+    // =========================
+    // AUTHENTICATION MANAGER
+    // =========================
 
     @Bean
     public AuthenticationManager authenticationManager(
