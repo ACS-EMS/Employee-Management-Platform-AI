@@ -25,25 +25,14 @@ public class SecurityConfig {
             throws Exception {
 
         http
-
-                // =========================
-                // CSRF
-                // =========================
                 .csrf(csrf -> csrf.disable())
 
-                // =========================
-                // SESSION
-                // =========================
-                // JWT authentication is stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-                // =========================
-                // AUTHORIZATION
-                // =========================
                 .authorizeHttpRequests(auth -> auth
 
                         // =========================
@@ -60,16 +49,12 @@ public class SecurityConfig {
                         // JOB APIs
                         // =========================
 
-                        // Any authenticated user can view jobs
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/jobs",
                                 "/api/jobs/**"
                         ).authenticated()
 
-
-                        // Employer / HR / Hiring Manager /
-                        // Recruiter / Super Admin can create jobs
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/jobs"
@@ -81,9 +66,6 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // Employer / HR / Hiring Manager /
-                        // Recruiter / Super Admin can update jobs
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/jobs/**"
@@ -95,8 +77,6 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // Employer / Super Admin can delete jobs
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/jobs/**"
@@ -110,36 +90,21 @@ public class SecurityConfig {
                         // APPLICATION APIs
                         // =========================
 
-                        // Candidate applies for a job
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/applications/apply/**"
-                        ).hasRole(
-                                "CANDIDATE"
-                        )
+                        ).hasRole("CANDIDATE")
 
-
-                        // Candidate views their applications
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/applications/my"
-                        ).hasRole(
-                                "CANDIDATE"
-                        )
+                        ).hasRole("CANDIDATE")
 
-
-                        // Candidate withdraws their application
-                        // Must come before general PUT rule
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/*/withdraw"
-                        ).hasRole(
-                                "CANDIDATE"
-                        )
+                        ).hasRole("CANDIDATE")
 
-
-                        // HR / Employer / Hiring Manager /
-                        // Recruiter / Super Admin views job applicants
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/applications/job/**"
@@ -151,9 +116,6 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // HR / Employer / Hiring Manager /
-                        // Recruiter / Super Admin updates application status
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/**"
@@ -170,8 +132,6 @@ public class SecurityConfig {
                         // INTERVIEW APIs
                         // =========================
 
-                        // HR / Hiring Manager /
-                        // Recruiter / Super Admin schedules interview
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/interviews/schedule"
@@ -182,18 +142,11 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // Candidate views own interviews
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/interviews/my"
-                        ).hasRole(
-                                "CANDIDATE"
-                        )
+                        ).hasRole("CANDIDATE")
 
-
-                        // HR / Hiring Manager /
-                        // Recruiter / Super Admin views interviews for a job
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/interviews/job/**"
@@ -204,8 +157,6 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // Interviewer views assigned interviews
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/interviews/interviewer/**"
@@ -217,13 +168,34 @@ public class SecurityConfig {
                                 "SUPER_ADMIN"
                         )
 
-
-                        // HR / Hiring Manager /
-                        // Recruiter / Super Admin reschedules
-                        // or updates interview
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/interviews/**"
+                        ).hasAnyRole(
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
+                        )
+
+
+                        // =========================
+                        // INTERVIEW FEEDBACK APIs
+                        // =========================
+
+                        // Interviewer submits feedback
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/interview-feedback"
+                        ).hasRole(
+                                "INTERVIEWER"
+                        )
+
+                        // HR / Hiring Manager /
+                        // Recruiter / Super Admin view feedback
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/interview-feedback/**"
                         ).hasAnyRole(
                                 "HR",
                                 "HIRING_MANAGER",
@@ -240,9 +212,6 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-                // =========================
-                // JWT FILTER
-                // =========================
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
