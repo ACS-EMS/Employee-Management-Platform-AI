@@ -18,38 +18,78 @@ public class JwtService {
     private static final String SECRET_KEY =
             "VGhpcy1pcy1hLXN1cGVyLXNlY3JldC1rZXktZm9yLWp3dC1hdXRoZW50aWNhdGlvbi0xMjM0NTY=";
 
+
+    // =========================
+    // GENERATE TOKEN
+    // =========================
+
     public String generateToken(String email, String role) {
 
         Map<String, Object> claims = new HashMap<>();
+
         claims.put("role", role);
 
         return Jwts.builder()
                 .claims(claims)
                 .subject(email)
-                .issuedAt(new Date(System.currentTimeMillis()))
+                .issuedAt(
+                        new Date(System.currentTimeMillis())
+                )
                 .expiration(
-                        new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)
+                        new Date(
+                                System.currentTimeMillis()
+                                        + 1000 * 60 * 60 * 24
+                        )
                 )
                 .signWith(getSigningKey())
                 .compact();
     }
 
+
+    // =========================
+    // EXTRACT EMAIL
+    // =========================
+
     public String extractEmail(String token) {
-        return extractClaim(token, Claims::getSubject);
+
+        return extractClaim(
+                token,
+                Claims::getSubject
+        );
     }
 
+
+    // =========================
+    // EXTRACT EXPIRATION
+    // =========================
+
     public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+
+        return extractClaim(
+                token,
+                Claims::getExpiration
+        );
     }
+
+
+    // =========================
+    // EXTRACT CLAIM
+    // =========================
 
     public <T> T extractClaim(
             String token,
             Function<Claims, T> claimsResolver) {
 
-        Claims claims = extractAllClaims(token);
+        Claims claims =
+                extractAllClaims(token);
 
         return claimsResolver.apply(claims);
     }
+
+
+    // =========================
+    // EXTRACT ALL CLAIMS
+    // =========================
 
     private Claims extractAllClaims(String token) {
 
@@ -60,19 +100,38 @@ public class JwtService {
                 .getPayload();
     }
 
+
+    // =========================
+    // SIGNING KEY
+    // =========================
+
     private SecretKey getSigningKey() {
 
         byte[] keyBytes =
-                Decoders.BASE64.decode(SECRET_KEY);
+                Decoders.BASE64.decode(
+                        SECRET_KEY
+                );
 
-        return Keys.hmacShaKeyFor(keyBytes);
+        return Keys.hmacShaKeyFor(
+                keyBytes
+        );
     }
+
+
+    // =========================
+    // CHECK EXPIRATION
+    // =========================
 
     public boolean isTokenExpired(String token) {
 
         return extractExpiration(token)
                 .before(new Date());
     }
+
+
+    // =========================
+    // VALIDATE TOKEN
+    // =========================
 
     public boolean validateToken(
             String token,

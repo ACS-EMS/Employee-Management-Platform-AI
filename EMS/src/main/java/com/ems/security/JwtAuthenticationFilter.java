@@ -17,13 +17,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter
+        extends OncePerRequestFilter {
 
     @Autowired
     private JwtService jwtService;
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
 
     @Override
     protected void doFilterInternal(
@@ -32,44 +34,62 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
+        // Get Authorization header
         String authHeader =
                 request.getHeader("Authorization");
 
-        System.out.println("Authorization Header: " + authHeader);
+        System.out.println(
+                "Authorization Header: " + authHeader
+        );
 
+
+        // No token
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
 
-            System.out.println("No Bearer token found");
+            filterChain.doFilter(
+                    request,
+                    response
+            );
 
-            filterChain.doFilter(request, response);
             return;
         }
 
-        String token = authHeader.substring(7);
+
+        // Remove "Bearer "
+        String token =
+                authHeader.substring(7);
 
         String email;
 
+
         try {
 
-            email = jwtService.extractEmail(token);
+            email =
+                    jwtService.extractEmail(token);
 
             System.out.println(
-                    "Email extracted from JWT: " + email
+                    "JWT Email: " + email
             );
 
         } catch (Exception e) {
 
             System.out.println(
-                    "JWT ERROR: " + e.getMessage()
+                    "Invalid JWT: "
+                            + e.getMessage()
             );
 
-            e.printStackTrace();
+            filterChain.doFilter(
+                    request,
+                    response
+            );
 
-            filterChain.doFilter(request, response);
             return;
         }
 
+
+        // Authenticate only if authentication
+        // is not already available
         if (email != null &&
                 SecurityContextHolder
                         .getContext()
@@ -79,10 +99,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     userDetailsService
                             .loadUserByUsername(email);
 
-            System.out.println(
-                    "User loaded: " +
-                            userDetails.getUsername()
-            );
 
             boolean valid =
                     jwtService.validateToken(
@@ -90,9 +106,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             userDetails.getUsername()
                     );
 
-            System.out.println(
-                    "Token valid: " + valid
-            );
 
             if (valid) {
 
@@ -103,27 +116,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
+
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource()
                                 .buildDetails(request)
                 );
 
+
                 SecurityContextHolder
                         .getContext()
                         .setAuthentication(authentication);
 
+
                 System.out.println(
-                        "AUTHENTICATED: " +
-                                authentication.isAuthenticated()
+                        "Authenticated User: "
+                                + userDetails.getUsername()
                 );
 
                 System.out.println(
-                        "Authorities: " +
-                                authentication.getAuthorities()
+                        "Authorities: "
+                                + userDetails.getAuthorities()
                 );
             }
         }
 
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
 }

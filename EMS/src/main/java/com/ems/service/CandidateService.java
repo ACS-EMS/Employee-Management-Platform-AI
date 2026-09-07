@@ -1,7 +1,7 @@
-package com.ems.ems.service;
+package com.ems.service;
 
-import com.ems.ems.entity.Candidate;
-import com.ems.ems.repository.CandidateRepository;
+import com.ems.entity.Candidate;
+import com.ems.repository.CandidateRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

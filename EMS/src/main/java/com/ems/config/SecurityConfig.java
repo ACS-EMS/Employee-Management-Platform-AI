@@ -8,8 +8,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -18,44 +16,35 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
-
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
 
         http
 
                 // =========================
                 // CSRF
                 // =========================
-                .csrf(csrf ->
-                        csrf.disable()
-                )
-
+                .csrf(csrf -> csrf.disable())
 
                 // =========================
                 // SESSION
                 // =========================
-                // JWT is stateless,
-                // so Spring should not create sessions
+                // JWT authentication is stateless
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         )
                 )
 
-
                 // =========================
                 // AUTHORIZATION
                 // =========================
                 .authorizeHttpRequests(auth -> auth
-
 
                         // =========================
                         // AUTH APIs
@@ -71,7 +60,7 @@ public class SecurityConfig {
                         // JOB APIs
                         // =========================
 
-                        // Logged-in users can view jobs
+                        // Any authenticated user can view jobs
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/jobs",
@@ -79,33 +68,41 @@ public class SecurityConfig {
                         ).authenticated()
 
 
-                        // Employer/Admin can create jobs
+                        // Employer / HR / Hiring Manager /
+                        // Recruiter / Super Admin can create jobs
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/jobs"
                         ).hasAnyRole(
                                 "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
-                        // Employer/Admin can update jobs
+                        // Employer / HR / Hiring Manager /
+                        // Recruiter / Super Admin can update jobs
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/jobs/**"
                         ).hasAnyRole(
                                 "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
-                        // Employer/Admin can delete jobs
+                        // Employer / Super Admin can delete jobs
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/api/jobs/**"
                         ).hasAnyRole(
                                 "EMPLOYER",
-                                "ADMIN"
+                                "SUPER_ADMIN"
                         )
 
 
@@ -113,7 +110,7 @@ public class SecurityConfig {
                         // APPLICATION APIs
                         // =========================
 
-                        // Candidate applies for job
+                        // Candidate applies for a job
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/applications/apply/**"
@@ -122,7 +119,7 @@ public class SecurityConfig {
                         )
 
 
-                        // Candidate views own applications
+                        // Candidate views their applications
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/applications/my"
@@ -131,8 +128,8 @@ public class SecurityConfig {
                         )
 
 
-                        // Candidate withdraws own application
-                        // Keep this BEFORE general PUT application rule
+                        // Candidate withdraws their application
+                        // Must come before general PUT rule
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/*/withdraw"
@@ -141,25 +138,31 @@ public class SecurityConfig {
                         )
 
 
-                        // Employer/Admin views applicants
-                        // for a particular job
+                        // HR / Employer / Hiring Manager /
+                        // Recruiter / Super Admin views job applicants
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/applications/job/**"
                         ).hasAnyRole(
                                 "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
-                        // Employer/Admin updates
-                        // application status
+                        // HR / Employer / Hiring Manager /
+                        // Recruiter / Super Admin updates application status
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/applications/**"
                         ).hasAnyRole(
                                 "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
@@ -167,13 +170,16 @@ public class SecurityConfig {
                         // INTERVIEW APIs
                         // =========================
 
-                        // Employer/Admin schedules interview
+                        // HR / Hiring Manager /
+                        // Recruiter / Super Admin schedules interview
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/interviews/schedule"
                         ).hasAnyRole(
-                                "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
@@ -186,25 +192,43 @@ public class SecurityConfig {
                         )
 
 
-                        // Employer/Admin views
-                        // interviews for a job
+                        // HR / Hiring Manager /
+                        // Recruiter / Super Admin views interviews for a job
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/interviews/job/**"
                         ).hasAnyRole(
-                                "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
-                        // Employer/Admin reschedules interview
-                        // or updates interview status
+                        // Interviewer views assigned interviews
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/interviews/interviewer/**"
+                        ).hasAnyRole(
+                                "INTERVIEWER",
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
+                        )
+
+
+                        // HR / Hiring Manager /
+                        // Recruiter / Super Admin reschedules
+                        // or updates interview
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/api/interviews/**"
                         ).hasAnyRole(
-                                "EMPLOYER",
-                                "ADMIN"
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
                         )
 
 
@@ -216,26 +240,16 @@ public class SecurityConfig {
                         .authenticated()
                 )
 
-
                 // =========================
                 // JWT FILTER
                 // =========================
-
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 );
 
-
         return http.build();
     }
-
-
-    // =========================
-    // PASSWORD ENCODER
-    // =========================
-
-
 
 
     // =========================
@@ -247,7 +261,6 @@ public class SecurityConfig {
             AuthenticationConfiguration configuration)
             throws Exception {
 
-        return configuration
-                .getAuthenticationManager();
+        return configuration.getAuthenticationManager();
     }
 }

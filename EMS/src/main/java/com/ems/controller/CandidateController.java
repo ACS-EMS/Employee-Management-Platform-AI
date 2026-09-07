@@ -1,7 +1,7 @@
-package com.ems.ems.controller;
+package com.ems.controller;
 
-import com.ems.ems.entity.Candidate;
-import com.ems.ems.service.CandidateService;
+import com.ems.entity.Candidate;
+import com.ems.service.CandidateService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
