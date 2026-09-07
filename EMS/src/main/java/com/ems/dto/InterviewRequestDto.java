@@ -11,6 +11,8 @@ public class InterviewRequestDto {
 
     private Long applicationId;
 
+    private Long interviewerId;
+
     private LocalDateTime interviewDateTime;
 
     private String interviewMode;

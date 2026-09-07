@@ -29,8 +29,10 @@ public class InterviewService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private NotificationService notificationService;
 
-    // Employer schedules interview
+
     public ResponseEntity<ApiResponse<Interview>> scheduleInterview(
             InterviewRequestDto dto) {
 
@@ -82,8 +84,22 @@ public class InterviewService {
                     LocalDateTime.now()
             );
 
+            // Save interview
             Interview savedInterview =
                     interviewRepository.save(interview);
+
+
+            // =========================
+            // CANDIDATE NOTIFICATION
+            // =========================
+
+            notificationService.createNotification(
+                    application.getCandidateId(),
+                    "Your interview has been scheduled on "
+                            + interview.getInterviewDateTime(),
+                    "INTERVIEW_SCHEDULED"
+            );
+
 
             ApiResponse<Interview> response =
                     new ApiResponse<>(
@@ -240,6 +256,19 @@ public class InterviewService {
 
             Interview updatedInterview =
                     interviewRepository.save(interview);
+            notificationService.createNotification(
+                    interview.getCandidateId(),
+                    "Your interview has been rescheduled to "
+                            + interview.getInterviewDateTime(),
+                    "INTERVIEW_RESCHEDULED"
+            );
+
+            notificationService.createNotification(
+                    interview.getInterviewerId(),
+                    "Your assigned interview has been rescheduled to "
+                            + interview.getInterviewDateTime(),
+                    "INTERVIEW_RESCHEDULED"
+            );
 
             ApiResponse<Interview> response =
                     new ApiResponse<>(
@@ -290,6 +319,20 @@ public class InterviewService {
 
             Interview updatedInterview =
                     interviewRepository.save(interview);
+            if ("CANCELLED".equalsIgnoreCase(status)) {
+
+                notificationService.createNotification(
+                        interview.getCandidateId(),
+                        "Your interview has been cancelled.",
+                        "INTERVIEW_CANCELLED"
+                );
+
+                notificationService.createNotification(
+                        interview.getInterviewerId(),
+                        "Your assigned interview has been cancelled.",
+                        "INTERVIEW_CANCELLED"
+                );
+            }
 
             ApiResponse<Interview> response =
                     new ApiResponse<>(

@@ -1,10 +1,12 @@
 package com.ems.controller;
 
+import com.ems.common.ApiResponse;
 import com.ems.dto.InterviewFeedbackDto;
 import com.ems.entity.InterviewFeedback;
 import com.ems.service.InterviewFeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,11 +20,11 @@ public class InterviewFeedbackController {
     private InterviewFeedbackService feedbackService;
 
     @PostMapping
-    public ResponseEntity<InterviewFeedback> submitFeedback(
-            @RequestBody InterviewFeedbackDto dto) {
+    public ResponseEntity<ResponseEntity<ApiResponse<InterviewFeedback>>> submitFeedback(
+            @RequestBody InterviewFeedbackDto dto, Authentication authentication) {
 
         return ResponseEntity.ok(
-                feedbackService.submitFeedback(dto)
+                feedbackService.submitFeedback(dto,authentication)
         );
     }
 

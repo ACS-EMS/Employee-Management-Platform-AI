@@ -207,7 +207,19 @@ public class SecurityConfig {
                         // =========================
                         // OTHER APIs
                         // =========================
+// =========================
+// NOTIFICATION APIs
+// =========================
 
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/api/notifications/**"
+                                ).authenticated()
+
+                                .requestMatchers(
+                                        HttpMethod.PUT,
+                                        "/api/notifications/**"
+                                ).authenticated()
                         .anyRequest()
                         .authenticated()
                 )

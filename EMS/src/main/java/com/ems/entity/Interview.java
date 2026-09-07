@@ -1,5 +1,6 @@
 package com.ems.entity;
 
+import com.ems.common.InterviewStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +24,8 @@ public class Interview {
 
     private Long jobId;
 
+    private Long interviewerId;
+
     private LocalDateTime interviewDateTime;
 
     private String interviewMode;
@@ -31,9 +34,10 @@ public class Interview {
 
     private String location;
 
-    private String status;
-
     private String notes;
 
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    private InterviewStatus status;
 }

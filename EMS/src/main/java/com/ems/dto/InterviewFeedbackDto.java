@@ -10,7 +10,7 @@ import lombok.*;
 public class InterviewFeedbackDto {
 
     private Long interviewId;
-    private Long interviewerId;
+
     private Integer rating;
     private String feedback;
     private String recommendation;
