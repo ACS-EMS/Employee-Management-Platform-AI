@@ -1,8 +1,10 @@
 package com.ems.repository;
 
+import com.ems.common.InterviewStatus;
 import com.ems.entity.Interview;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface InterviewRepository
@@ -12,5 +14,7 @@ public interface InterviewRepository
 
     List<Interview> findByJobId(Long jobId);
 
-    List<Interview> findByApplicationId(Long applicationId);
+    long countByStatus(com.ems.common.InterviewStatus status);
+
+    List<Interview> findTop5ByStatusAndInterviewDateTimeAfterOrderByInterviewDateTimeAsc(InterviewStatus interviewStatus, LocalDateTime now);
 }

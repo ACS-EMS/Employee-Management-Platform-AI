@@ -3,6 +3,7 @@ package com.ems.repository;
 import com.ems.entity.Job;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface JobRepository extends JpaRepository<Job, Long> {
@@ -19,4 +20,6 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             String location
     );
     long countByStatusIgnoreCase(String status);
+
+    Collection<Object> findTop5ByOrderByCreatedDateDesc();
 }
