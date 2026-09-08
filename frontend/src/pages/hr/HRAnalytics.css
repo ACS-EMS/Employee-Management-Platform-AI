@@ -1,0 +1,39 @@
+/* HRAnalytics.css — new classes only, reuses .jobs-stats, .job-stat-card,
+   .jobs-panel, .job-table, .job-row, .job-heading, .no-jobs from existing files. */
+
+.analytics-row-grid-2 {
+  grid-template-columns: 2fr 1fr;
+}
+
+.analytics-row-grid-3 {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+.skill-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.analytics-skill-chip {
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.analytics-note {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .analytics-row-grid-2,
+  .analytics-row-grid-3 {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

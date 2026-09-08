@@ -1,0 +1,88 @@
+/* HRCandidates.css
+   Only new classes — reuses .hr-dashboard, .hr-main, .hr-header,
+   .jobs-panel, .jobs-panel-header, .job-table, .job-row, .job-heading,
+   .no-jobs, and .create-job-button from HRDashboard.css / HRJobs.css.
+   Nothing in those files is modified. */
+
+.candidate-upload-panel {
+  margin-bottom: 25px;
+}
+
+.candidate-upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.candidate-upload-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.candidate-upload-row input[type="file"] {
+  flex: 1;
+  min-width: 220px;
+  padding: 10px 12px;
+  border: 1px solid #d7dbea;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.candidate-upload-row input[type="text"] {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 14px;
+  border: 1px solid #d7dbea;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.candidate-upload-row input[type="text"]:focus {
+  border-color: #4f46e5;
+}
+
+.candidate-upload-msg {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: #475569;
+}
+
+.candidate-row-grid {
+  grid-template-columns: 1fr 1.5fr 1fr 2fr;
+}
+
+.candidate-id-cell {
+  font-family: monospace;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.candidate-skills-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-chip {
+  background: #eef0ff;
+  color: #4f46e5;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.no-skills-text {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .candidate-row-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

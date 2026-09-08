@@ -1,0 +1,63 @@
+/* HRInterviews.css — new classes only, reuses .jobs-panel, .job-table,
+   .job-row, .job-heading, .no-jobs, .create-job-button from existing files. */
+
+.interview-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.interview-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+.interview-form-wide {
+  grid-column: 1 / -1;
+}
+
+.interview-form-grid select,
+.interview-form-grid input {
+  padding: 12px 14px;
+  border: 1px solid #d7dbea;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.interview-form-grid select:focus,
+.interview-form-grid input:focus {
+  border-color: #4f46e5;
+}
+
+.interview-error {
+  color: #dc2626;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.interview-row-grid {
+  grid-template-columns: 1.5fr 1.3fr 1fr 1.2fr 1.3fr 1fr;
+}
+
+.status-select {
+  padding: 6px 10px;
+  border: 1px solid #d7dbea;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #334155;
+}
+
+@media (max-width: 900px) {
+  .interview-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .interview-row-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
