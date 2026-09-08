@@ -4,6 +4,9 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+.idea/
+FETCH_HEAD
+
 ### STS ###
 .apt_generated
 .classpath
@@ -14,7 +17,6 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
 *.iws
 *.iml
 *.ipr
