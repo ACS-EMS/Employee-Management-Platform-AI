@@ -16,4 +16,5 @@ public interface ApplicationRepository
             Long candidateId,
             Long jobId
     );
+    long countByStatus(com.ems.common.ApplicationStatus status);
 }
