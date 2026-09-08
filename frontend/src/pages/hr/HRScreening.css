@@ -1,0 +1,133 @@
+/* HRScreening.css — new classes only, reuses .jobs-panel, .job-table,
+   .job-row, .job-heading, .create-job-button, .no-jobs from existing files. */
+
+.screening-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.screening-form select {
+  flex: 1;
+  min-width: 220px;
+  padding: 12px 14px;
+  border: 1px solid #d7dbea;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.screening-form select:focus {
+  border-color: #4f46e5;
+}
+
+.screening-error {
+  color: #dc2626;
+  font-size: 13.5px;
+  margin: 6px 0 0;
+}
+
+.screening-result {
+  margin-top: 20px;
+  border-top: 1px solid #eef0f4;
+  padding-top: 20px;
+}
+
+.match-score-block {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.match-score-circle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.match-explanation {
+  color: #475569;
+  font-size: 14px;
+  margin: 0;
+}
+
+.sub-score-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.sub-score-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #64748b;
+  text-transform: capitalize;
+  margin-bottom: 4px;
+}
+
+.sub-score-track {
+  background: #eef0f4;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.sub-score-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.skill-gap-block {
+  background: #f8f9ff;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.skill-gap-block p {
+  margin: 0 0 8px;
+}
+
+.skill-gap-verdict {
+  font-weight: 600;
+  color: #111827;
+}
+
+.ranking-row-grid {
+  grid-template-columns: 0.6fr 1.5fr 1fr 2fr;
+}
+
+.rank-badge {
+  font-weight: 700;
+  color: #475569;
+}
+
+.rank-badge.rank-first {
+  color: #b45309;
+}
+
+@media (max-width: 900px) {
+  .ranking-row-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .match-score-block {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
