@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import com.ems.common.InterviewStatus;
 
 @Service
 public class InterviewService {
@@ -78,7 +79,7 @@ public class InterviewService {
                     dto.getNotes()
             );
 
-            interview.setStatus("SCHEDULED");
+            interview.setStatus(InterviewStatus.SCHEDULED);
 
             interview.setCreatedAt(
                     LocalDateTime.now()
@@ -252,7 +253,7 @@ public class InterviewService {
                     dto.getNotes()
             );
 
-            interview.setStatus("RESCHEDULED");
+            interview.setStatus(InterviewStatus.RESCHEDULED);
 
             Interview updatedInterview =
                     interviewRepository.save(interview);
@@ -315,7 +316,7 @@ public class InterviewService {
                                     )
                             );
 
-            interview.setStatus(status);
+            interview.setStatus(InterviewStatus.valueOf(status.toUpperCase()));
 
             Interview updatedInterview =
                     interviewRepository.save(interview);
