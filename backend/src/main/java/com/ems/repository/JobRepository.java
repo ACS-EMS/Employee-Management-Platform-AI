@@ -18,4 +18,5 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             String title,
             String location
     );
+    long countByStatusIgnoreCase(String status);
 }
