@@ -17,4 +17,7 @@ public interface ApplicationRepository
             Long jobId
     );
     long countByStatus(com.ems.common.ApplicationStatus status);
+
+    Long countByJobId(Long id);
+    List<Application> findTop5ByOrderByAppliedAtDesc();
 }
