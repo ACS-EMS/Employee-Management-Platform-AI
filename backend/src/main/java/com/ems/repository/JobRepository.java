@@ -21,5 +21,5 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     );
     long countByStatusIgnoreCase(String status);
 
-    Collection<Object> findTop5ByOrderByCreatedDateDesc();
+    Collection<Job> findTop5ByOrderByCreatedDateDesc();
 }
