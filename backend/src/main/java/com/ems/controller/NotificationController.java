@@ -17,25 +17,74 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     public NotificationController(
-            NotificationService notificationService) {
+            NotificationService notificationService
+    ) {
         this.notificationService = notificationService;
     }
 
-    @GetMapping("/my")
-    public ResponseEntity<ApiResponse<List<Notification>>> getMyNotifications(
-            Authentication authentication) {
+    // =========================
+    // GET MY NOTIFICATIONS
+    // =========================
 
-        return notificationService.getMyNotifications(authentication);
+    @GetMapping("/my")
+    public ResponseEntity<ApiResponse<List<Notification>>>
+    getMyNotifications(
+            Authentication authentication
+    ) {
+
+        return notificationService
+                .getMyNotifications(
+                        authentication
+                );
     }
 
-    @PutMapping("/{notificationId}/read")
-    public ResponseEntity<ApiResponse<Notification>> markAsRead(
-            @PathVariable Long notificationId,
-            Authentication authentication) {
+    // =========================
+    // GET UNREAD COUNT
+    // =========================
 
-        return notificationService.markAsRead(
-                notificationId,
-                authentication
-        );
+    @GetMapping("/unread-count")
+    public ResponseEntity<ApiResponse<Long>>
+    getUnreadCount(
+            Authentication authentication
+    ) {
+
+        return notificationService
+                .getUnreadCount(
+                        authentication
+                );
+    }
+
+    // =========================
+    // MARK ONE AS READ
+    // =========================
+
+    @PutMapping("/{notificationId}/read")
+    public ResponseEntity<ApiResponse<Notification>>
+    markAsRead(
+            @PathVariable Long notificationId,
+            Authentication authentication
+    ) {
+
+        return notificationService
+                .markAsRead(
+                        notificationId,
+                        authentication
+                );
+    }
+
+    // =========================
+    // MARK ALL AS READ
+    // =========================
+
+    @PutMapping("/read-all")
+    public ResponseEntity<ApiResponse<Void>>
+    markAllAsRead(
+            Authentication authentication
+    ) {
+
+        return notificationService
+                .markAllAsRead(
+                        authentication
+                );
     }
 }

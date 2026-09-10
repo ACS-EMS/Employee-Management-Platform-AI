@@ -18,6 +18,105 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    // =========================
+// GET UNREAD COUNT
+// =========================
+
+    public ResponseEntity<ApiResponse<Long>> getUnreadCount(
+            Authentication authentication) {
+
+        try {
+
+            String email = authentication.getName();
+
+            User user = userRepository
+                    .findByEmailIgnoreCase(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("User not found")
+                    );
+
+            long unreadCount =
+                    notificationRepository
+                            .countByUserIdAndReadStatusFalse(
+                                    user.getUserId()
+                            );
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "Unread notification count fetched successfully",
+                            unreadCount
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
+
+
+// =========================
+// MARK ALL AS READ
+// =========================
+
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead(
+            Authentication authentication) {
+
+        try {
+
+            String email = authentication.getName();
+
+            User user = userRepository
+                    .findByEmailIgnoreCase(email)
+                    .orElseThrow(() ->
+                            new RuntimeException("User not found")
+                    );
+
+            List<Notification> unreadNotifications =
+                    notificationRepository
+                            .findByUserIdAndReadStatusFalse(
+                                    user.getUserId()
+                            );
+
+            unreadNotifications.forEach(
+                    notification ->
+                            notification.setReadStatus(true)
+            );
+
+            notificationRepository.saveAll(
+                    unreadNotifications
+            );
+
+            return ResponseEntity.ok(
+                    new ApiResponse<>(
+                            true,
+                            "All notifications marked as read",
+                            null
+                    )
+            );
+
+        } catch (Exception e) {
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(
+                            new ApiResponse<>(
+                                    false,
+                                    e.getMessage(),
+                                    null
+                            )
+                    );
+        }
+    }
 
     public NotificationService(
             NotificationRepository notificationRepository,
