@@ -18,4 +18,6 @@ public class AdminUserDto {
     private String role;
 
     private Boolean active;
+
+    private String department;
 }
