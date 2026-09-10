@@ -10,6 +10,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -25,6 +30,11 @@ public class SecurityConfig {
             throws Exception {
 
         http
+                // =========================
+                // CORS
+                // =========================
+                .cors(cors -> {})
+
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
@@ -42,6 +52,17 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/signup"
+                        ).permitAll()
+
+
+                        // =========================
+                        // SWAGGER
+                        // =========================
+
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
                         ).permitAll()
 
 
@@ -65,11 +86,6 @@ public class SecurityConfig {
                                 "RECRUITER",
                                 "SUPER_ADMIN"
                         )
-                                .requestMatchers(
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html",
-                                        "/v3/api-docs/**"
-                                ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.PUT,
@@ -188,16 +204,11 @@ public class SecurityConfig {
                         // INTERVIEW FEEDBACK APIs
                         // =========================
 
-                        // Interviewer submits feedback
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/interview-feedback"
-                        ).hasRole(
-                                "INTERVIEWER"
-                        )
+                        ).hasRole("INTERVIEWER")
 
-                        // HR / Hiring Manager /
-                        // Recruiter / Super Admin view feedback
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/interview-feedback/**"
@@ -210,21 +221,49 @@ public class SecurityConfig {
 
 
                         // =========================
-                        // OTHER APIs
+                        // NOTIFICATION APIs
                         // =========================
-// =========================
-// NOTIFICATION APIs
-// =========================
 
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/api/notifications/**"
-                                ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/notifications/**"
+                        ).authenticated()
 
-                                .requestMatchers(
-                                        HttpMethod.PUT,
-                                        "/api/notifications/**"
-                                ).authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/notifications/**"
+                        ).authenticated()
+
+
+                        // =========================
+                        // AUDIT LOG APIs
+                        // =========================
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/audit-logs/**"
+                        ).hasAnyRole(
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
+                        )
+
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/audit-logs/**"
+                        ).hasAnyRole(
+                                "HR",
+                                "HIRING_MANAGER",
+                                "RECRUITER",
+                                "SUPER_ADMIN"
+                        )
+
+
+                        // =========================
+                        // ALL OTHER APIs
+                        // =========================
+
                         .anyRequest()
                         .authenticated()
                 )
@@ -235,6 +274,49 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+
+    // =========================
+    // CORS CONFIGURATION
+    // =========================
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration configuration =
+                new CorsConfiguration();
+
+        configuration.setAllowedOrigins(
+                List.of("http://localhost:5173")
+        );
+
+        configuration.setAllowedMethods(
+                List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "DELETE",
+                        "PATCH",
+                        "OPTIONS"
+                )
+        );
+
+        configuration.setAllowedHeaders(
+                List.of("*")
+        );
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
+
+        return source;
     }
 
 

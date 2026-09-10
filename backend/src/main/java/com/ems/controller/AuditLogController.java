@@ -9,6 +9,7 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/audit-logs")
+@CrossOrigin(origins = "http://localhost:5173")
 public class AuditLogController {
 
     private final AuditLogService auditLogService;
