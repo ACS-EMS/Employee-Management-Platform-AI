@@ -527,8 +527,9 @@ public class AdminUserService {
                     )
             );
 
-        } catch (Exception e) {
+        }catch (Exception e) {
 
+<<<<<<< Updated upstream
             e.printStackTrace();
 
             return ResponseEntity
@@ -541,6 +542,20 @@ public class AdminUserService {
                             )
                     );
         }
+=======
+    e.printStackTrace();
+
+    return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(
+                    new ApiResponse<>(
+                            false,
+                            "Failed to update user status: " + e.getMessage(),
+                            null
+                    )
+            );
+}
+>>>>>>> Stashed changes
     }
 
     // ============================================
