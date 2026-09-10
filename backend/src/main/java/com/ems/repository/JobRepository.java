@@ -2,6 +2,7 @@ package com.ems.repository;
 
 import com.ems.entity.Job;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,4 +23,11 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     long countByStatusIgnoreCase(String status);
 
     Collection<Job> findTop5ByOrderByCreatedDateDesc();
+    @Query("""
+       SELECT j.status, COUNT(j)
+       FROM Job j
+       WHERE j.status IS NOT NULL
+       GROUP BY j.status
+       """)
+    List<Object[]> countJobsByStatus();
 }
