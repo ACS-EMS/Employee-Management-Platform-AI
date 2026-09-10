@@ -2,6 +2,7 @@ package com.ems.repository;
 
 import com.ems.entity.Application;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -20,4 +21,11 @@ public interface ApplicationRepository
 
     Long countByJobId(Long id);
     List<Application> findTop5ByOrderByAppliedAtDesc();
+    @Query("""
+       SELECT a.status, COUNT(a)
+       FROM Application a
+       WHERE a.status IS NOT NULL
+       GROUP BY a.status
+       """)
+    List<Object[]> countApplicationsByStatus();
 }
