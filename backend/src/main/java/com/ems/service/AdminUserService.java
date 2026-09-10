@@ -269,6 +269,7 @@ public class AdminUserService {
             user.setRole(
                     dto.getRole()
             );
+            user.setDepartment(dto.getDepartment());
 
             user.setActive(
                     dto.getActive() != null
@@ -391,6 +392,9 @@ public class AdminUserService {
                         dto.getRole()
                 );
             }
+            user.setDepartment(
+        dto.getDepartment()
+);
 
             if (dto.getActive() != null) {
 
@@ -564,6 +568,9 @@ public class AdminUserService {
         dto.setUserName(
                 user.getUserName()
         );
+        dto.setDepartment(
+        user.getDepartment()
+);
 
         dto.setEmail(
                 user.getEmail()
