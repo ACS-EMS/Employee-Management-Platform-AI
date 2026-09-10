@@ -13,11 +13,16 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
 
-    public AuditLogService(AuditLogRepository auditLogRepository) {
+    public AuditLogService(
+            AuditLogRepository auditLogRepository
+    ) {
         this.auditLogRepository = auditLogRepository;
     }
 
-    // Create an audit log
+    // ============================================
+    // CREATE AUDIT LOG
+    // ============================================
+
     public AuditLog createAuditLog(AuditLog auditLog) {
 
         if (auditLog.getDateTime() == null) {
@@ -27,46 +32,94 @@ public class AuditLogService {
         return auditLogRepository.save(auditLog);
     }
 
-    // Get all audit logs
+    // ============================================
+    // CREATE AUDIT LOG - SIMPLE METHOD
+    // ============================================
+
+    public AuditLog createAuditLog(
+            String module,
+            String action,
+            String details,
+            String performedBy
+    ) {
+
+        AuditLog auditLog = new AuditLog();
+
+        auditLog.setModule(module);
+        auditLog.setAction(action);
+        auditLog.setDetails(details);
+        auditLog.setPerformedBy(performedBy);
+        auditLog.setDateTime(LocalDateTime.now());
+
+        return auditLogRepository.save(auditLog);
+    }
+
+    // ============================================
+    // GET ALL
+    // ============================================
+
     public List<AuditLog> getAllAuditLogs() {
         return auditLogRepository.findAll();
     }
 
-    // Get audit log by ID
+    // ============================================
+    // GET BY ID
+    // ============================================
+
     public AuditLog getAuditLogById(Long id) {
-        return auditLogRepository.findById(id).orElse(null);
+        return auditLogRepository
+                .findById(id)
+                .orElse(null);
     }
 
-    // Search/filter audit logs
+    // ============================================
+    // SEARCH
+    // ============================================
+
     public List<AuditLog> searchAuditLogs(
             String module,
             String action,
-            LocalDate date) {
+            LocalDate date
+    ) {
 
-        List<AuditLog> logs = auditLogRepository.findAll();
+        List<AuditLog> logs =
+                auditLogRepository.findAll();
 
         return logs.stream()
+
                 .filter(log ->
-                        module == null
-                                || module.isBlank()
-                                || (log.getModule() != null
-                                && log.getModule()
-                                .toLowerCase()
-                                .contains(module.toLowerCase()))
+                        module == null ||
+                                module.isBlank() ||
+                                (
+                                        log.getModule() != null &&
+                                                log.getModule()
+                                                        .toLowerCase()
+                                                        .contains(
+                                                                module.toLowerCase()
+                                                        )
+                                )
                 )
+
                 .filter(log ->
-                        action == null
-                                || action.isBlank()
-                                || (log.getAction() != null
-                                && log.getAction()
-                                .equalsIgnoreCase(action))
+                        action == null ||
+                                action.isBlank() ||
+                                (
+                                        log.getAction() != null &&
+                                                log.getAction()
+                                                        .equalsIgnoreCase(action)
+                                )
                 )
+
                 .filter(log ->
-                        date == null
-                                || (log.getDateTime() != null
-                                && log.getDateTime().toLocalDate()
-                                .equals(date))
+                        date == null ||
+                                (
+                                        log.getDateTime() != null &&
+                                                log.getDateTime()
+                                                        .toLocalDate()
+                                                        .equals(date)
+                                )
                 )
+
                 .toList();
     }
 }
