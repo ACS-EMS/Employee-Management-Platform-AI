@@ -20,16 +20,24 @@ public class AdminUserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final NotificationService notificationService;
 
     public AdminUserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService
+            AuditLogService auditLogService,
+            NotificationService notificationService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
+        this.notificationService = notificationService;
     }
+
+    // ============================================================
+    // GET USERS
+    // ============================================================
+
     public ResponseEntity<ApiResponse<List<AdminUserDto>>> getUsers(
             String search,
             String role,
@@ -42,7 +50,6 @@ public class AdminUserService {
 
             List<AdminUserDto> result = users.stream()
 
-                    // Search by name or email
                     .filter(user -> {
 
                         if (search == null || search.trim().isEmpty()) {
@@ -107,13 +114,16 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to fetch users: " + e.getMessage(),
+                                    "Failed to fetch users",
                                     null
                             )
                     );
         }
     }
 
+    // ============================================================
+    // GET USER BY ID
+    // ============================================================
 
     public ResponseEntity<ApiResponse<AdminUserDto>> getUserById(
             Long userId
@@ -155,7 +165,7 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to fetch user: " + e.getMessage(),
+                                    "Failed to fetch user",
                                     null
                             )
                     );
@@ -172,7 +182,6 @@ public class AdminUserService {
 
         try {
 
-            // Validate username
             if (
                     dto.getUserName() == null ||
                             dto.getUserName().trim().isEmpty()
@@ -205,7 +214,6 @@ public class AdminUserService {
                         );
             }
 
-            // Validate password
             if (
                     dto.getPassword() == null ||
                             dto.getPassword().trim().isEmpty()
@@ -222,27 +230,9 @@ public class AdminUserService {
                         );
             }
 
-            // Validate role
-            if (
-                    dto.getRole() == null ||
-                            dto.getRole().trim().isEmpty()
-            ) {
-
-                return ResponseEntity
-                        .badRequest()
-                        .body(
-                                new ApiResponse<>(
-                                        false,
-                                        "Role is required",
-                                        null
-                                )
-                        );
-            }
-
-            // Check duplicate email
             if (
                     userRepository
-                            .findByEmailIgnoreCase(dto.getEmail().trim())
+                            .findByEmailIgnoreCase(dto.getEmail())
                             .isPresent()
             ) {
 
@@ -271,18 +261,16 @@ public class AdminUserService {
 
             user.setPassword(
                     passwordEncoder.encode(
-                            dto.getPassword().trim()
+                            dto.getPassword()
                     )
             );
 
             user.setRole(
-                    dto.getRole().trim()
+                    dto.getRole()
             );
 
             user.setDepartment(
-                    dto.getDepartment() != null
-                            ? dto.getDepartment().trim()
-                            : null
+                    dto.getDepartment()
             );
 
             user.setActive(
@@ -294,11 +282,21 @@ public class AdminUserService {
             User savedUser =
                     userRepository.save(user);
 
-            // Create audit log
+            // Audit log
             createAuditLogSafely(
                     "CREATE",
                     "Created user: " +
                             savedUser.getEmail()
+            );
+
+            // Notification
+            createNotificationSafely(
+                    "User " +
+                            savedUser.getUserName() +
+                            " (" +
+                            savedUser.getEmail() +
+                            ") was created",
+                    "USER_CREATED"
             );
 
             return ResponseEntity
@@ -320,7 +318,8 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to create user: " + e.getMessage(),
+                                    "Failed to create user: "
+                                            + e.getMessage(),
                                     null
                             )
                     );
@@ -355,10 +354,6 @@ public class AdminUserService {
                         );
             }
 
-            // ----------------------------------------------------
-            // CHECK EMAIL DUPLICATION
-            // ----------------------------------------------------
-
             if (
                     dto.getEmail() != null &&
                             !dto.getEmail().trim().isEmpty()
@@ -367,7 +362,7 @@ public class AdminUserService {
                 User existingUser =
                         userRepository
                                 .findByEmailIgnoreCase(
-                                        dto.getEmail().trim()
+                                        dto.getEmail()
                                 )
                                 .orElse(null);
 
@@ -390,10 +385,6 @@ public class AdminUserService {
                 }
             }
 
-            // ----------------------------------------------------
-            // UPDATE USER NAME
-            // ----------------------------------------------------
-
             if (
                     dto.getUserName() != null &&
                             !dto.getUserName().trim().isEmpty()
@@ -403,10 +394,6 @@ public class AdminUserService {
                         dto.getUserName().trim()
                 );
             }
-
-            // ----------------------------------------------------
-            // UPDATE EMAIL
-            // ----------------------------------------------------
 
             if (
                     dto.getEmail() != null &&
@@ -420,39 +407,22 @@ public class AdminUserService {
                 );
             }
 
-            // ----------------------------------------------------
-            // UPDATE ROLE
-            // ----------------------------------------------------
-
             if (
                     dto.getRole() != null &&
                             !dto.getRole().trim().isEmpty()
             ) {
 
                 user.setRole(
-                        dto.getRole().trim()
+                        dto.getRole()
                 );
             }
-
-            // ----------------------------------------------------
-            // UPDATE DEPARTMENT
-            // ----------------------------------------------------
 
             if (dto.getDepartment() != null) {
 
-                String department =
-                        dto.getDepartment().trim();
-
                 user.setDepartment(
-                        department.isEmpty()
-                                ? null
-                                : department
+                        dto.getDepartment()
                 );
             }
-
-            // ----------------------------------------------------
-            // UPDATE ACTIVE STATUS
-            // ----------------------------------------------------
 
             if (dto.getActive() != null) {
 
@@ -461,10 +431,6 @@ public class AdminUserService {
                 );
             }
 
-            // ----------------------------------------------------
-            // UPDATE PASSWORD ONLY IF PROVIDED
-            // ----------------------------------------------------
-
             if (
                     dto.getPassword() != null &&
                             !dto.getPassword().trim().isEmpty()
@@ -472,7 +438,7 @@ public class AdminUserService {
 
                 user.setPassword(
                         passwordEncoder.encode(
-                                dto.getPassword().trim()
+                                dto.getPassword()
                         )
                 );
             }
@@ -480,11 +446,19 @@ public class AdminUserService {
             User updatedUser =
                     userRepository.save(user);
 
-            // Create audit log
             createAuditLogSafely(
                     "UPDATE",
                     "Updated user: " +
                             updatedUser.getEmail()
+            );
+
+            createNotificationSafely(
+                    "User " +
+                            updatedUser.getUserName() +
+                            " (" +
+                            updatedUser.getEmail() +
+                            ") was updated",
+                    "USER_UPDATED"
             );
 
             return ResponseEntity.ok(
@@ -504,7 +478,8 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to update user: " + e.getMessage(),
+                                    "Failed to update user: "
+                                            + e.getMessage(),
                                     null
                             )
                     );
@@ -521,19 +496,6 @@ public class AdminUserService {
     ) {
 
         try {
-
-            if (active == null) {
-
-                return ResponseEntity
-                        .badRequest()
-                        .body(
-                                new ApiResponse<>(
-                                        false,
-                                        "Active status is required",
-                                        null
-                                )
-                        );
-            }
 
             User user = userRepository
                     .findById(userId)
@@ -565,6 +527,25 @@ public class AdminUserService {
                             : "Deactivated user: " +
                             updatedUser.getEmail()
             );
+
+            if (active) {
+
+                createNotificationSafely(
+                        "User " +
+                                updatedUser.getUserName() +
+                                " was activated",
+                        "USER_ACTIVATED"
+                );
+
+            } else {
+
+                createNotificationSafely(
+                        "User " +
+                                updatedUser.getUserName() +
+                                " was deactivated",
+                        "USER_DEACTIVATED"
+                );
+            }
 
             String message =
                     active
@@ -627,12 +608,24 @@ public class AdminUserService {
             String deletedUserEmail =
                     user.getEmail();
 
+            String deletedUserName =
+                    user.getUserName();
+
             userRepository.delete(user);
 
             createAuditLogSafely(
                     "DELETE",
                     "Deleted user: " +
                             deletedUserEmail
+            );
+
+            createNotificationSafely(
+                    "User " +
+                            deletedUserName +
+                            " (" +
+                            deletedUserEmail +
+                            ") was deleted",
+                    "USER_DELETED"
             );
 
             return ResponseEntity.ok(
@@ -661,7 +654,85 @@ public class AdminUserService {
     }
 
     // ============================================================
-    // SAVE AUDIT LOG SAFELY
+    // CREATE NOTIFICATION SAFELY
+    // ============================================================
+
+    private void createNotificationSafely(
+            String message,
+            String type
+    ) {
+
+        try {
+
+            Long adminUserId =
+                    getCurrentUserId();
+
+            if (adminUserId == null) {
+
+                System.out.println(
+                        "Notification not created: "
+                                + "logged-in user not found"
+                );
+
+                return;
+            }
+
+            notificationService
+                    .createNotification(
+                            adminUserId,
+                            message,
+                            type
+                    );
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Notification save failed: "
+                            + e.getMessage()
+            );
+
+            e.printStackTrace();
+        }
+    }
+
+    // ============================================================
+    // GET CURRENT USER ID
+    // ============================================================
+
+    private Long getCurrentUserId() {
+
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext()
+                        .getAuthentication();
+
+        if (
+                authentication == null ||
+                        !authentication.isAuthenticated() ||
+                        "anonymousUser"
+                                .equals(authentication.getPrincipal())
+        ) {
+
+            return null;
+        }
+
+        String email =
+                authentication.getName();
+
+        User user =
+                userRepository
+                        .findByEmailIgnoreCase(email)
+                        .orElse(null);
+
+        if (user == null) {
+            return null;
+        }
+
+        return user.getUserId();
+    }
+
+    // ============================================================
+    // AUDIT LOG SAFELY
     // ============================================================
 
     private void createAuditLogSafely(
@@ -680,10 +751,6 @@ public class AdminUserService {
 
         } catch (Exception e) {
 
-            /*
-             * Audit-log failure should NOT stop
-             * user create/update/delete/status operations.
-             */
             System.out.println(
                     "Audit log save failed: "
                             + e.getMessage()
@@ -694,7 +761,7 @@ public class AdminUserService {
     }
 
     // ============================================================
-    // CURRENT LOGGED-IN USER
+    // CURRENT USER
     // ============================================================
 
     private String getCurrentUser() {
@@ -706,9 +773,7 @@ public class AdminUserService {
 
         if (
                 authentication == null ||
-                        !authentication.isAuthenticated() ||
-                        "anonymousUser"
-                                .equals(authentication.getPrincipal())
+                        !authentication.isAuthenticated()
         ) {
 
             return "SYSTEM";
@@ -752,7 +817,6 @@ public class AdminUserService {
                 user.getActive()
         );
 
-        // Never send BCrypt password to frontend
         dto.setPassword(null);
 
         return dto;
