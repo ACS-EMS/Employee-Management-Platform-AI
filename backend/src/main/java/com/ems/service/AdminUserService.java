@@ -118,12 +118,7 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-<<<<<<< Updated upstream
-                                    "Failed to fetch users",
-=======
-                                    "Failed to fetch users: "
-                                            + e.getMessage(),
->>>>>>> Stashed changes
+                                    "Failed to fetch user: " + e.getMessage(),
                                     null
                             )
                     );
@@ -174,12 +169,7 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-<<<<<<< Updated upstream
-                                    "Failed to fetch user",
-=======
-                                    "Failed to fetch user: "
-                                            + e.getMessage(),
->>>>>>> Stashed changes
+                                    "Failed to fetch user: " + e.getMessage(),
                                     null
                             )
                     );
@@ -247,13 +237,7 @@ public class AdminUserService {
 
             if (
                     userRepository
-<<<<<<< Updated upstream
                             .findByEmailIgnoreCase(dto.getEmail())
-=======
-                            .findByEmailIgnoreCase(
-                                    dto.getEmail().trim()
-                            )
->>>>>>> Stashed changes
                             .isPresent()
             ) {
 
