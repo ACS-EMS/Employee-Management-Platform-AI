@@ -7,11 +7,9 @@ import com.ems.repository.UserRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,11 +30,6 @@ public class AdminUserService {
         this.passwordEncoder = passwordEncoder;
         this.auditLogService = auditLogService;
     }
-
-    // ============================================
-    // GET USERS + SEARCH + FILTER
-    // ============================================
-
     public ResponseEntity<ApiResponse<List<AdminUserDto>>> getUsers(
             String search,
             String role,
@@ -45,66 +38,57 @@ public class AdminUserService {
 
         try {
 
-            List<User> users =
-                    userRepository.findAll();
+            List<User> users = userRepository.findAll();
 
-            List<AdminUserDto> result =
-                    users.stream()
+            List<AdminUserDto> result = users.stream()
 
-                            .filter(user -> {
+                    // Search by name or email
+                    .filter(user -> {
 
-                                if (
-                                        search == null ||
-                                                search.trim().isEmpty()
-                                ) {
-                                    return true;
-                                }
+                        if (search == null || search.trim().isEmpty()) {
+                            return true;
+                        }
 
-                                String searchValue =
-                                        search.trim().toLowerCase();
+                        String searchValue =
+                                search.trim().toLowerCase();
 
-                                boolean nameMatches =
-                                        user.getUserName() != null &&
-                                                user.getUserName()
-                                                        .toLowerCase()
-                                                        .contains(searchValue);
+                        boolean nameMatches =
+                                user.getUserName() != null &&
+                                        user.getUserName()
+                                                .toLowerCase()
+                                                .contains(searchValue);
 
-                                boolean emailMatches =
-                                        user.getEmail() != null &&
-                                                user.getEmail()
-                                                        .toLowerCase()
-                                                        .contains(searchValue);
+                        boolean emailMatches =
+                                user.getEmail() != null &&
+                                        user.getEmail()
+                                                .toLowerCase()
+                                                .contains(searchValue);
 
-                                return nameMatches || emailMatches;
-                            })
+                        return nameMatches || emailMatches;
+                    })
 
-                            .filter(user -> {
+                    .filter(user -> {
 
-                                if (
-                                        role == null ||
-                                                role.trim().isEmpty()
-                                ) {
-                                    return true;
-                                }
+                        if (role == null || role.trim().isEmpty()) {
+                            return true;
+                        }
 
-                                return user.getRole() != null &&
-                                        user.getRole()
-                                                .equalsIgnoreCase(role);
-                            })
+                        return user.getRole() != null &&
+                                user.getRole()
+                                        .equalsIgnoreCase(role);
+                    })
 
-                            .filter(user -> {
+                    .filter(user -> {
 
-                                if (active == null) {
-                                    return true;
-                                }
+                        if (active == null) {
+                            return true;
+                        }
 
-                                return active.equals(
-                                        user.getActive()
-                                );
-                            })
+                        return active.equals(user.getActive());
+                    })
 
-                            .map(this::convertToDto)
-                            .toList();
+                    .map(this::convertToDto)
+                    .toList();
 
             return ResponseEntity.ok(
                     new ApiResponse<>(
@@ -123,16 +107,13 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to fetch users",
+                                    "Failed to fetch users: " + e.getMessage(),
                                     null
                             )
                     );
         }
     }
 
-    // ============================================
-    // GET USER BY ID
-    // ============================================
 
     public ResponseEntity<ApiResponse<AdminUserDto>> getUserById(
             Long userId
@@ -174,16 +155,16 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to fetch user",
+                                    "Failed to fetch user: " + e.getMessage(),
                                     null
                             )
                     );
         }
     }
 
-    // ============================================
+    // ============================================================
     // CREATE USER
-    // ============================================
+    // ============================================================
 
     public ResponseEntity<ApiResponse<AdminUserDto>> createUser(
             AdminUserDto dto
@@ -191,6 +172,7 @@ public class AdminUserService {
 
         try {
 
+            // Validate username
             if (
                     dto.getUserName() == null ||
                             dto.getUserName().trim().isEmpty()
@@ -223,6 +205,7 @@ public class AdminUserService {
                         );
             }
 
+            // Validate password
             if (
                     dto.getPassword() == null ||
                             dto.getPassword().trim().isEmpty()
@@ -239,9 +222,27 @@ public class AdminUserService {
                         );
             }
 
+            // Validate role
+            if (
+                    dto.getRole() == null ||
+                            dto.getRole().trim().isEmpty()
+            ) {
+
+                return ResponseEntity
+                        .badRequest()
+                        .body(
+                                new ApiResponse<>(
+                                        false,
+                                        "Role is required",
+                                        null
+                                )
+                        );
+            }
+
+            // Check duplicate email
             if (
                     userRepository
-                            .findByEmailIgnoreCase(dto.getEmail())
+                            .findByEmailIgnoreCase(dto.getEmail().trim())
                             .isPresent()
             ) {
 
@@ -270,16 +271,18 @@ public class AdminUserService {
 
             user.setPassword(
                     passwordEncoder.encode(
-                            dto.getPassword()
+                            dto.getPassword().trim()
                     )
             );
 
             user.setRole(
-                    dto.getRole()
+                    dto.getRole().trim()
             );
 
             user.setDepartment(
-                    dto.getDepartment()
+                    dto.getDepartment() != null
+                            ? dto.getDepartment().trim()
+                            : null
             );
 
             user.setActive(
@@ -291,6 +294,7 @@ public class AdminUserService {
             User savedUser =
                     userRepository.save(user);
 
+            // Create audit log
             createAuditLogSafely(
                     "CREATE",
                     "Created user: " +
@@ -316,16 +320,16 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to create user",
+                                    "Failed to create user: " + e.getMessage(),
                                     null
                             )
                     );
         }
     }
 
-    // ============================================
+    // ============================================================
     // UPDATE USER
-    // ============================================
+    // ============================================================
 
     public ResponseEntity<ApiResponse<AdminUserDto>> updateUser(
             Long userId,
@@ -351,6 +355,10 @@ public class AdminUserService {
                         );
             }
 
+            // ----------------------------------------------------
+            // CHECK EMAIL DUPLICATION
+            // ----------------------------------------------------
+
             if (
                     dto.getEmail() != null &&
                             !dto.getEmail().trim().isEmpty()
@@ -359,7 +367,7 @@ public class AdminUserService {
                 User existingUser =
                         userRepository
                                 .findByEmailIgnoreCase(
-                                        dto.getEmail()
+                                        dto.getEmail().trim()
                                 )
                                 .orElse(null);
 
@@ -382,6 +390,10 @@ public class AdminUserService {
                 }
             }
 
+            // ----------------------------------------------------
+            // UPDATE USER NAME
+            // ----------------------------------------------------
+
             if (
                     dto.getUserName() != null &&
                             !dto.getUserName().trim().isEmpty()
@@ -391,6 +403,10 @@ public class AdminUserService {
                         dto.getUserName().trim()
                 );
             }
+
+            // ----------------------------------------------------
+            // UPDATE EMAIL
+            // ----------------------------------------------------
 
             if (
                     dto.getEmail() != null &&
@@ -404,21 +420,39 @@ public class AdminUserService {
                 );
             }
 
+            // ----------------------------------------------------
+            // UPDATE ROLE
+            // ----------------------------------------------------
+
             if (
                     dto.getRole() != null &&
                             !dto.getRole().trim().isEmpty()
             ) {
 
                 user.setRole(
-                        dto.getRole()
+                        dto.getRole().trim()
                 );
             }
 
+            // ----------------------------------------------------
+            // UPDATE DEPARTMENT
+            // ----------------------------------------------------
+
             if (dto.getDepartment() != null) {
+
+                String department =
+                        dto.getDepartment().trim();
+
                 user.setDepartment(
-                        dto.getDepartment()
+                        department.isEmpty()
+                                ? null
+                                : department
                 );
             }
+
+            // ----------------------------------------------------
+            // UPDATE ACTIVE STATUS
+            // ----------------------------------------------------
 
             if (dto.getActive() != null) {
 
@@ -427,6 +461,10 @@ public class AdminUserService {
                 );
             }
 
+            // ----------------------------------------------------
+            // UPDATE PASSWORD ONLY IF PROVIDED
+            // ----------------------------------------------------
+
             if (
                     dto.getPassword() != null &&
                             !dto.getPassword().trim().isEmpty()
@@ -434,7 +472,7 @@ public class AdminUserService {
 
                 user.setPassword(
                         passwordEncoder.encode(
-                                dto.getPassword()
+                                dto.getPassword().trim()
                         )
                 );
             }
@@ -442,6 +480,7 @@ public class AdminUserService {
             User updatedUser =
                     userRepository.save(user);
 
+            // Create audit log
             createAuditLogSafely(
                     "UPDATE",
                     "Updated user: " +
@@ -465,16 +504,16 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to update user",
+                                    "Failed to update user: " + e.getMessage(),
                                     null
                             )
                     );
         }
     }
 
-    // ============================================
+    // ============================================================
     // ACTIVATE / DEACTIVATE USER
-    // ============================================
+    // ============================================================
 
     public ResponseEntity<ApiResponse<AdminUserDto>> updateStatus(
             Long userId,
@@ -482,6 +521,19 @@ public class AdminUserService {
     ) {
 
         try {
+
+            if (active == null) {
+
+                return ResponseEntity
+                        .badRequest()
+                        .body(
+                                new ApiResponse<>(
+                                        false,
+                                        "Active status is required",
+                                        null
+                                )
+                        );
+            }
 
             User user = userRepository
                     .findById(userId)
@@ -527,9 +579,8 @@ public class AdminUserService {
                     )
             );
 
-        }catch (Exception e) {
+        } catch (Exception e) {
 
-<<<<<<< Updated upstream
             e.printStackTrace();
 
             return ResponseEntity
@@ -537,30 +588,17 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to update user status",
+                                    "Failed to update user status: "
+                                            + e.getMessage(),
                                     null
                             )
                     );
         }
-=======
-    e.printStackTrace();
-
-    return ResponseEntity
-            .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(
-                    new ApiResponse<>(
-                            false,
-                            "Failed to update user status: " + e.getMessage(),
-                            null
-                    )
-            );
-}
->>>>>>> Stashed changes
     }
 
-    // ============================================
+    // ============================================================
     // DELETE USER
-    // ============================================
+    // ============================================================
 
     public ResponseEntity<ApiResponse<Void>> deleteUser(
             Long userId
@@ -614,16 +652,17 @@ public class AdminUserService {
                     .body(
                             new ApiResponse<>(
                                     false,
-                                    "Failed to delete user",
+                                    "Failed to delete user: "
+                                            + e.getMessage(),
                                     null
                             )
                     );
         }
     }
 
-    // ============================================
+    // ============================================================
     // SAVE AUDIT LOG SAFELY
-    // ============================================
+    // ============================================================
 
     private void createAuditLogSafely(
             String action,
@@ -641,6 +680,10 @@ public class AdminUserService {
 
         } catch (Exception e) {
 
+            /*
+             * Audit-log failure should NOT stop
+             * user create/update/delete/status operations.
+             */
             System.out.println(
                     "Audit log save failed: "
                             + e.getMessage()
@@ -650,9 +693,9 @@ public class AdminUserService {
         }
     }
 
-    // ============================================
+    // ============================================================
     // CURRENT LOGGED-IN USER
-    // ============================================
+    // ============================================================
 
     private String getCurrentUser() {
 
@@ -663,17 +706,20 @@ public class AdminUserService {
 
         if (
                 authentication == null ||
-                        !authentication.isAuthenticated()
+                        !authentication.isAuthenticated() ||
+                        "anonymousUser"
+                                .equals(authentication.getPrincipal())
         ) {
+
             return "SYSTEM";
         }
 
         return authentication.getName();
     }
 
-    // ============================================
+    // ============================================================
     // ENTITY -> DTO
-    // ============================================
+    // ============================================================
 
     private AdminUserDto convertToDto(
             User user
@@ -706,6 +752,7 @@ public class AdminUserService {
                 user.getActive()
         );
 
+        // Never send BCrypt password to frontend
         dto.setPassword(null);
 
         return dto;
